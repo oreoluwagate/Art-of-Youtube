@@ -193,9 +193,9 @@ def render(s):
     bgp = f'assets/vset_{setn}.png'; gagp = f"assets/{s['gag']['id']}.png"
     nf = int(round(tl['total'] * FPS))
     cmd = ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
-           '-i', f'vtmp/{tag}_mix.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'animation',
+           '-i', f'vtmp/{tag}_mix.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'animation', '-threads', '2',
            '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', f'vout/{tag}.mp4']
-    pr = subprocess.Popen(cmd, stdin=subprocess.PIPE); t_0 = time.time()
+    import shutil; FD = f'vtmp/fr_{tag}'; shutil.rmtree(FD, ignore_errors=True); os.makedirs(FD); t_0 = time.time()
     for f in range(nf):
         T = f / FPS; sg = next((x for x in segs if x['t0'] <= T < x['t1']), segs[-1]); sh = sg['shot']; k = sh[0]
         u = (T - sg['t0']) / max(.01, sg['t1'] - sg['t0']); el = T - sg['t0']
@@ -239,8 +239,10 @@ def render(s):
             if T < .2: s2 = .8 + .2 * T / .2; ti = T0.resize((int(T0.size[0] * s2), int(T0.size[1] * s2)), Image.BILINEAR)
             if a < 1: ti = ti.copy(); ti.putalpha(ti.getchannel('A').point(lambda v: int(v * a)))
             fr.paste(ti, (int((W - ti.size[0]) / 2), int(250 - ti.size[1] / 2)), ti)
-        pr.stdin.write(fr.tobytes())
-    pr.stdin.close(); pr.wait()
+        fr.save(f'{FD}/{f:05d}.jpg', quality=93)
+    _s.clear(); _card.clear()
+    i = cmd.index('-f'); cmd[i:i + 10] = ['-framerate', str(FPS), '-i', f'{FD}/%05d.jpg']
+    subprocess.run(cmd, check=True); shutil.rmtree(FD)
     open('vout/log.txt', 'a').write(f'{tag} {nf} frames {tl["total"]:.1f}s rendered in {time.time() - t_0:.0f}s\n')
 
 if __name__ == '__main__':
