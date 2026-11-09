@@ -6,7 +6,7 @@ sys.path.insert(0, '.')
 from shorts import SH
 W, H, FPS, SR = 1080, 1920, 30, 44100
 INFO = json.load(open('spr/info.json')); LM = json.load(open('linemap.json'))
-FB = '/usr/share/fonts/truetype/google-fonts/Poppins-Bold.ttf'
+FB = '/home/user/Poppins-Bold.ttf'
 os.makedirs('vout', exist_ok=True); os.makedirs('vtmp', exist_ok=True)
 
 # ---------- audio helpers (sfx lifted from pipe/audio.py) ----------
